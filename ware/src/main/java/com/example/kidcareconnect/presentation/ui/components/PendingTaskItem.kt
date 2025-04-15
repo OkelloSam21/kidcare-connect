@@ -2,6 +2,11 @@ package com.example.kidcareconnect.presentation.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Monitor
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -9,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
-import com.example.kidcareconnect.wearos.data.model.PendingTaskUi
+import com.example.kidcareconnect.presentation.data.model.PendingTaskUi
 
 @Composable
 fun PendingTaskItem(
@@ -75,7 +80,7 @@ fun PendingTaskItem(
             // Task type icon
             when (task.type) {
                 "medication" -> Icon(
-                    imageVector = Icons.Default.MedicationLiquid,
+                    imageVector = Icons.Default.Medication,
                     contentDescription = null,
                     tint = priorityColor,
                     modifier = Modifier.size(20.dp)
