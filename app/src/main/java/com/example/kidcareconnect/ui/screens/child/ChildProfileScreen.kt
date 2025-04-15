@@ -1,5 +1,7 @@
 package com.example.kidcareconnect.ui.screens.child
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,11 +17,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.kidcareconnect.ui.components.SmartChildCareTopBar
+import com.example.kidcareconnect.data.local.entities.Child
 import com.example.kidcareconnect.ui.components.SmartChildCareTopBar
 import com.example.kidcareconnect.ui.components.TaskCard
+import com.example.kidcareconnect.ui.screens.dashboard.PendingTaskUi
 import kotlinx.coroutines.flow.collectLatest
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChildProfileScreen(
@@ -33,11 +37,11 @@ fun ChildProfileScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs = listOf("Medications", "Meals", "Health", "Notes")
-    
+
     LaunchedEffect(key1 = childId) {
         viewModel.loadChildData(childId)
     }
-    
+
     LaunchedEffect(key1 = viewModel.events) {
         viewModel.events.collectLatest { event ->
             when (event) {
@@ -50,7 +54,7 @@ fun ChildProfileScreen(
             }
         }
     }
-    
+
     Scaffold(
         topBar = {
             SmartChildCareTopBar(
@@ -114,161 +118,196 @@ fun ChildProfileScreen(
             ) {
                 CircularProgressIndicator()
             }
-        } else if (uiState.child == null) {
+        } else {
+            // Extract child to a local variable to help with smart casting
+            val child = uiState.child
+
+            if (child == null) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Child not found")
+                }
+            } else {
+                // Now we can safely use the non-null child
+                ChildProfileContent(
+                    child = child,
+                    uiState = uiState,
+                    selectedTabIndex = selectedTabIndex,
+                    tabs = tabs,
+                    onTabSelected = { selectedTabIndex = it },
+                    onMedicationSelected = viewModel::onMedicationSelected,
+                    onMealSelected = viewModel::onMealSelected,
+                    onHealthLogSelected = viewModel::onHealthLogSelected,
+                    onNoteSelected = viewModel::onNoteSelected,
+                    onTaskSelected = viewModel::onTaskSelected,
+                    calculateAge = viewModel::calculateAge,
+                    modifier = Modifier.padding(innerPadding)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChildProfileContent(
+    child: Child,
+    uiState: ChildProfileUiState,
+    selectedTabIndex: Int,
+    tabs: List<String>,
+    onTabSelected: (Int) -> Unit,
+    onMedicationSelected: (String) -> Unit,
+    onMealSelected: (String) -> Unit,
+    onHealthLogSelected: (String) -> Unit,
+    onNoteSelected: (String) -> Unit,
+    onTaskSelected: (PendingTaskUi) -> Unit,
+    calculateAge: (java.time.LocalDate) -> String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxSize()
+    ) {
+        // Child header information
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Profile picture
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Child not found")
+                if (child.profilePictureUrl != null) {
+                    // Image would go here
+                    Text(
+                        text = child.name.first().toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                } else {
+                    Text(
+                        text = child.name.first().toString(),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
             }
-        } else {
+
+            // Child information
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(start = 16.dp)
+                    .weight(1f)
             ) {
-                // Child header information
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Profile picture
-                    Box(
-                        modifier = Modifier
-                            .size(80.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primaryContainer),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (uiState.child.profilePictureUrl != null) {
-                            // Image would go here
-                            Text(
-                                text = uiState.child.name.first().toString(),
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        } else {
-                            Text(
-                                text = uiState.child.name.first().toString(),
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
-                    
-                    // Child information
-                    Column(
-                        modifier = Modifier
-                            .padding(start = 16.dp)
-                            .weight(1f)
-                    ) {
-                        Text(
-                            text = uiState.child.name,
-                            style = MaterialTheme.typography.headlineSmall
-                        )
-                        Text(
-                            text = "Age: ${viewModel.calculateAge(uiState.child.dateOfBirth)}",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = "Gender: ${uiState.child.gender}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                        if (uiState.child.bloodGroup != null) {
-                            Text(
-                                text = "Blood Group: ${uiState.child.bloodGroup}",
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-                    }
-                }
-                
-                // Upcoming tasks at the top
-                if (uiState.upcomingTasks.isNotEmpty()) {
+                Text(
+                    text = child.name,
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Text(
+                    text = "Age: ${calculateAge(child.dateOfBirth)}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Text(
+                    text = "Gender: ${child.gender}",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                if (child.bloodGroup != null) {
                     Text(
-                        text = "Upcoming Tasks",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
-                    )
-                    
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(160.dp)
-                            .padding(horizontal = 8.dp)
-                    ) {
-                        items(uiState.upcomingTasks) { task ->
-                            TaskCard(
-                                title = task.title,
-                                description = task.description,
-                                icon = {
-                                    Icon(
-                                        imageVector = when (task.type) {
-                                            "medication" -> Icons.Default.Medication
-                                            "meal" -> Icons.Default.Restaurant
-                                            "health" -> Icons.Default.HealthAndSafety
-                                            else -> Icons.Default.Assignment
-                                        },
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                },
-                                priority = task.priority,
-                                onClick = { viewModel.onTaskSelected(task) }
-                            )
-                        }
-                    }
-                }
-                
-                // Tabs for different sections
-                TabRow(
-                    selectedTabIndex = selectedTabIndex,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    tabs.forEachIndexed { index, title ->
-                        Tab(
-                            selected = selectedTabIndex == index,
-                            onClick = { selectedTabIndex = index },
-                            text = { Text(title) },
-                            icon = {
-                                Icon(
-                                    imageVector = when (index) {
-                                        0 -> Icons.Default.Medication
-                                        1 -> Icons.Default.Restaurant
-                                        2 -> Icons.Default.HealthAndSafety
-                                        3 -> Icons.Default.Notes
-                                        else -> Icons.Default.Info
-                                    },
-                                    contentDescription = null
-                                )
-                            }
-                        )
-                    }
-                }
-                
-                // Tab content
-                when (selectedTabIndex) {
-                    0 -> MedicationsTab(
-                        medications = uiState.medications,
-                        onMedicationClick = { viewModel.onMedicationSelected(it) }
-                    )
-                    1 -> MealsTab(
-                        dietaryPlan = uiState.dietaryPlan,
-                        mealLogs = uiState.mealLogs,
-                        onMealClick = { viewModel.onMealSelected(it) }
-                    )
-                    2 -> HealthTab(
-                        healthLogs = uiState.healthLogs,
-                        onHealthLogClick = { viewModel.onHealthLogSelected(it) }
-                    )
-                    3 -> NotesTab(
-                        notes = uiState.notes,
-                        onNoteClick = { viewModel.onNoteSelected(it) }
+                        text = "Blood Group: ${child.bloodGroup}",
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
+        }
+
+        // Upcoming tasks at the top
+        if (uiState.upcomingTasks.isNotEmpty()) {
+            Text(
+                text = "Upcoming Tasks",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+            )
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(160.dp)
+                    .padding(horizontal = 8.dp)
+            ) {
+                items(uiState.upcomingTasks) { task ->
+                    TaskCard(
+                        title = task.title,
+                        description = task.description,
+                        icon = {
+                            Icon(
+                                imageVector = when (task.type) {
+                                    "medication" -> Icons.Default.Medication
+                                    "meal" -> Icons.Default.Restaurant
+                                    "health" -> Icons.Default.HealthAndSafety
+                                    else -> Icons.Default.Assignment
+                                },
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        },
+                        priority = task.priority,
+                        onClick = { onTaskSelected(task) }
+                    )
+                }
+            }
+        }
+
+        // Tabs for different sections
+        TabRow(
+            selectedTabIndex = selectedTabIndex,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { onTabSelected(index) },
+                    text = { Text(title) },
+                    icon = {
+                        Icon(
+                            imageVector = when (index) {
+                                0 -> Icons.Default.Medication
+                                1 -> Icons.Default.Restaurant
+                                2 -> Icons.Default.HealthAndSafety
+                                3 -> Icons.Default.Notes
+                                else -> Icons.Default.Info
+                            },
+                            contentDescription = null
+                        )
+                    }
+                )
+            }
+        }
+
+        // Tab content
+        when (selectedTabIndex) {
+            0 -> MedicationsTab(
+                medications = uiState.medications,
+                onMedicationClick = onMedicationSelected
+            )
+            1 -> MealsTab(
+                dietaryPlan = uiState.dietaryPlan,
+                mealLogs = uiState.mealLogs,
+                onMealClick = onMealSelected
+            )
+            2 -> HealthTab(
+                healthLogs = uiState.healthLogs,
+                onHealthLogClick = onHealthLogSelected
+            )
+            3 -> NotesTab(
+                notes = uiState.notes,
+                onNoteClick = onNoteSelected
+            )
         }
     }
 }
@@ -317,7 +356,7 @@ fun MedicationsTab(
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
-                        
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -330,7 +369,7 @@ fun MedicationsTab(
                                 "MEDIUM" -> MaterialTheme.colorScheme.secondary
                                 else -> MaterialTheme.colorScheme.primary
                             }
-                            
+
                             Card(
                                 colors = CardDefaults.cardColors(containerColor = priorityColor)
                             ) {
@@ -379,7 +418,7 @@ fun MealsTab(
                         text = "Dietary Information",
                         style = MaterialTheme.typography.titleMedium
                     )
-                    
+
                     if (!dietaryPlan.allergies.isNullOrEmpty()) {
                         Row(
                             modifier = Modifier.padding(top = 8.dp),
@@ -398,7 +437,7 @@ fun MealsTab(
                             )
                         }
                     }
-                    
+
                     if (!dietaryPlan.restrictions.isNullOrEmpty()) {
                         Text(
                             text = "Restrictions: ${dietaryPlan.restrictions}",
@@ -406,7 +445,7 @@ fun MealsTab(
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
-                    
+
                     if (!dietaryPlan.preferences.isNullOrEmpty()) {
                         Text(
                             text = "Preferences: ${dietaryPlan.preferences}",
@@ -416,14 +455,14 @@ fun MealsTab(
                     }
                 }
             }
-            
+
             // Meal Logs
             Text(
                 text = "Recent Meals",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
-            
+
             if (mealLogs.isEmpty()) {
                 Box(
                     modifier = Modifier
@@ -459,7 +498,7 @@ fun MealsTab(
                                         .size(40.dp)
                                         .padding(end = 16.dp)
                                 )
-                                
+
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = mealLog.mealType,
@@ -476,14 +515,14 @@ fun MealsTab(
                                         )
                                     }
                                 }
-                                
+
                                 // Status indicator
                                 val statusColor = when (mealLog.status) {
                                     "COMPLETED" -> MaterialTheme.colorScheme.tertiary
                                     "MISSED" -> MaterialTheme.colorScheme.error
                                     else -> MaterialTheme.colorScheme.primary
                                 }
-                                
+
                                 Box(
                                     modifier = Modifier
                                         .size(16.dp)
@@ -516,7 +555,7 @@ fun HealthTab(
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        
+
         if (healthLogs.isEmpty()) {
             EmptyTabContent(
                 icon = Icons.Default.HealthAndSafety,
@@ -547,7 +586,7 @@ fun HealthTab(
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
-                            
+
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -561,7 +600,7 @@ fun HealthTab(
                                         value = "${log.temperature}°F"
                                     )
                                 }
-                                
+
                                 if (log.heartRate != null) {
                                     HealthMetricChip(
                                         icon = Icons.Default.Favorite,
@@ -570,7 +609,7 @@ fun HealthTab(
                                     )
                                 }
                             }
-                            
+
                             if (!log.symptoms.isNullOrEmpty()) {
                                 Text(
                                     text = "Symptoms: ${log.symptoms}",
@@ -578,7 +617,7 @@ fun HealthTab(
                                     modifier = Modifier.padding(top = 8.dp)
                                 )
                             }
-                            
+
                             if (!log.notes.isNullOrEmpty()) {
                                 Text(
                                     text = log.notes,
@@ -664,13 +703,13 @@ fun NotesTab(
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
-                        
+
                         Text(
                             text = note.content,
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                        
+
                         Text(
                             text = "By: ${note.author}",
                             style = MaterialTheme.typography.bodySmall,
