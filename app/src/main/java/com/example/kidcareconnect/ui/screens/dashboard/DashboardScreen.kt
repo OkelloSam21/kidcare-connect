@@ -24,7 +24,6 @@ import com.example.kidcareconnect.ui.components.TaskCard
 import kotlinx.coroutines.flow.collectLatest
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     navigateToChildProfile: (String) -> Unit,
@@ -33,11 +32,12 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val showMyChildrenOnly = remember { mutableStateOf(uiState.currentUserRole == UserRole.CARETAKER) }
-    
-    LaunchedEffect(key1 = true) {
-        viewModel.loadChildren()
-        viewModel.loadPendingTasks()
+    val showMyChildrenOnly = remember { mutableStateOf(true) } // Default to showing only assigned children
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Update showMyChildrenOnly based on user role
+    LaunchedEffect(uiState.currentUserRole) {
+        showMyChildrenOnly.value = uiState.currentUserRole == UserRole.CARETAKER
     }
 
     LaunchedEffect(key1 = viewModel.events) {
@@ -46,12 +46,13 @@ fun DashboardScreen(
                 is DashboardEvent.NavigateToChild -> {
                     navigateToChildProfile(event.childId)
                 }
-
-                is DashboardEvent.ShowMessage -> TODO()
+                is DashboardEvent.ShowMessage -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
             }
         }
     }
-    
+
     Scaffold(
         topBar = {
             SmartChildCareTopBar(
@@ -71,7 +72,7 @@ fun DashboardScreen(
                             )
                         }
                     }
-                    
+
                     IconButton(onClick = navigateToSettings) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -80,7 +81,8 @@ fun DashboardScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -89,19 +91,57 @@ fun DashboardScreen(
         ) {
             // Current User Info
             if (uiState.currentUser != null) {
-                Text(
-                    text = "Welcome, ${uiState.currentUser?.name}",
-                    style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.padding(16.dp)
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "Welcome, ${uiState.currentUser?.name}",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        Text(
+                            text = "Role: ${if (uiState.currentUserRole == UserRole.ADMIN) "Administrator" else "Caretaker"}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    // User role indicator
+//                    Chip(
+//                        onClick = { },
+//                        colors = ChipDefaults.chipColors(
+//                            containerColor = if (uiState.currentUserRole == UserRole.ADMIN)
+//                                MaterialTheme.colorScheme.primary
+//                            else
+//                                MaterialTheme.colorScheme.secondary
+//                        ),
+//                        leadingIcon = {
+//                            Icon(
+//                                imageVector = if (uiState.currentUserRole == UserRole.ADMIN)
+//                                    Icons.Default.AdminPanelSettings
+//                                else
+//                                    Icons.Default.HealthAndSafety,
+//                                contentDescription = null,
+//                                tint = MaterialTheme.colorScheme.onPrimary
+//                            )
+//                        }
+//                    ) {
+//                        Text(
+//                            text = if (uiState.currentUserRole == UserRole.ADMIN) "Admin" else "Caretaker",
+//                            color = MaterialTheme.colorScheme.onPrimary
+//                        )
+//                    }
+                }
             }
-            
-            // Filter options (for caretakers to see only their assigned children)
+
+            // Filter options (only for admin users)
             if (uiState.currentUserRole == UserRole.ADMIN) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
@@ -120,151 +160,126 @@ fun DashboardScreen(
                     )
                 }
             }
-            
-            // Pending Tasks Section
-            if (uiState.pendingTasks.isNotEmpty()) {
-                Text(
-                    text = "Pending Tasks",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(16.dp)
-                )
-                
-                LazyColumn(
-                    modifier = Modifier
-                        .weight(0.4f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                ) {
-                    items(uiState.pendingTasks) { task ->
-                        TaskCard(
-                            title = task.title,
-                            description = task.description,
-                            icon = {
-                                Icon(
-                                    imageVector = when (task.type) {
-                                        "medication" -> Icons.Default.Medication
-                                        "meal" -> Icons.Default.Restaurant
-                                        "health" -> Icons.Default.HealthAndSafety
-                                        else -> Icons.Default.Assignment
-                                    },
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            priority = task.priority,
-                            onClick = { viewModel.onTaskSelected(task) }
-                        )
-                    }
-                }
-            }
-            
-            // Children Section
-            Text(
-                text = "Children",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp)
-            )
-            
-            if (uiState.children.isEmpty()) {
+
+            if (uiState.isLoading) {
                 Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.ChildCare,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "No children found",
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                        if (uiState.currentUserRole == UserRole.ADMIN) {
-                            Button(
-                                onClick = { viewModel.onAddChildClicked() }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Add Child")
-                            }
-                        }
-                    }
+                    CircularProgressIndicator()
                 }
             } else {
-                LazyColumn(
+                // Pending Tasks Section
+                if (uiState.pendingTasks.isNotEmpty()) {
+                    Text(
+                        text = "Pending Tasks",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(0.4f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        items(uiState.pendingTasks) { task ->
+                            TaskCard(
+                                title = task.title,
+                                description = task.description,
+                                icon = {
+                                    Icon(
+                                        imageVector = when (task.type) {
+                                            "medication" -> Icons.Default.Medication
+                                            "meal" -> Icons.Default.Restaurant
+                                            "health" -> Icons.Default.HealthAndSafety
+                                            else -> Icons.Default.Assignment
+                                        },
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                },
+                                priority = task.priority,
+                                onClick = { viewModel.onTaskSelected(task) }
+                            )
+                        }
+                    }
+                } else {
+                    //no pending task
+                    Text(
+                        text = "No pending tasks",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp)
+                    )
+
+                }
+
+                // Children Section
+                Row(
                     modifier = Modifier
-                        .weight(if (uiState.pendingTasks.isEmpty()) 1f else 0.6f)
                         .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    items(
-                        if (showMyChildrenOnly.value) 
-                            uiState.myAssignedChildren 
-                        else 
-                            uiState.children
-                    ) { child ->
-                        ChildListItem(
-                            name = child.name,
-                            age = "Age: ${viewModel.calculateAge(child.dateOfBirth)}",
-                            profilePicture = {
-                                if (child.profilePictureUrl != null) {
-                                    // Image loading would go here
-                                    // For now, we'll use a placeholder
-                                    Box(
-                                        modifier = Modifier
-                                            .size(56.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primary),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = child.name.first().toString(),
-                                            style = MaterialTheme.typography.titleLarge,
-                                            color = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    }
-                                } else {
-                                    // Default avatar
-                                    Box(
-                                        modifier = Modifier
-                                            .size(56.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primaryContainer),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = child.name.first().toString(),
-                                            style = MaterialTheme.typography.titleLarge,
-                                            color = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
-                                    }
-                                }
-                            },
-                            hasPendingTasks = viewModel.childHasPendingTasks(child.childId),
-                            onClick = { viewModel.onChildSelected(child.childId) }
+                    Text(
+                        text = "Children",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    // Child count badge
+                    val childrenToShow = when {
+                        uiState.currentUserRole == UserRole.CARETAKER -> uiState.children
+                        showMyChildrenOnly.value -> uiState.myAssignedChildren
+                        else -> uiState.children
+                    }
+
+                    Surface(
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Text(
+                            text = "${childrenToShow.size} children",
+                            style = MaterialTheme.typography.labelMedium,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
-                    
-                    // Add Child button for Admin
-                    if (uiState.currentUserRole == UserRole.ADMIN) {
-                        item {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
+                }
+
+                // Determine which children to show based on role and filter
+                val childrenToShow = when {
+                    uiState.currentUserRole == UserRole.CARETAKER -> uiState.children // Caretakers always see just their assigned children
+                    showMyChildrenOnly.value -> uiState.myAssignedChildren // Admin with filter on
+                    else -> uiState.children // Admin with filter off
+                }
+
+                if (childrenToShow.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ChildCare,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = if (uiState.currentUserRole == UserRole.ADMIN && !showMyChildrenOnly.value)
+                                    "No children found in the system"
+                                else
+                                    "No children assigned to you",
+                                style = MaterialTheme.typography.bodyLarge,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                            if (uiState.currentUserRole == UserRole.ADMIN) {
                                 Button(
                                     onClick = { viewModel.onAddChildClicked() }
                                 ) {
@@ -275,6 +290,79 @@ fun DashboardScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("Add Child")
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(if (uiState.pendingTasks.isEmpty()) 1f else 0.6f)
+                            .fillMaxWidth()
+                    ) {
+                        items(childrenToShow) { child ->
+                            ChildListItem(
+                                name = child.name,
+                                age = "Age: ${viewModel.calculateAge(child.dateOfBirth)}",
+                                profilePicture = {
+                                    if (child.profilePictureUrl != null) {
+                                        // Image loading would go here
+                                        // For now, we'll use a placeholder
+                                        Box(
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primary),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = child.name.first().toString(),
+                                                style = MaterialTheme.typography.titleLarge,
+                                                color = MaterialTheme.colorScheme.onPrimary
+                                            )
+                                        }
+                                    } else {
+                                        // Default avatar
+                                        Box(
+                                            modifier = Modifier
+                                                .size(56.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.primaryContainer),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = child.name.first().toString(),
+                                                style = MaterialTheme.typography.titleLarge,
+                                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
+                                        }
+                                    }
+                                },
+                                hasPendingTasks = viewModel.childHasPendingTasks(child.childId),
+                                onClick = { viewModel.onChildSelected(child.childId) }
+                            )
+                        }
+
+                        // Add Child button for Admin
+                        if (uiState.currentUserRole == UserRole.ADMIN) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Button(
+                                        onClick = { viewModel.onAddChildClicked() }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Add,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Add Child")
+                                    }
                                 }
                             }
                         }
