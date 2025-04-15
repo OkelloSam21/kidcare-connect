@@ -1,13 +1,20 @@
 package com.example.kidcareconnect.presentation.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Monitor
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material3.Badge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
-import com.example.kidcareconnect.wearos.data.model.ChildUi
+import com.example.kidcareconnect.presentation.data.model.ChildUi
 
 @Composable
 fun ChildTaskItem(
@@ -75,7 +82,7 @@ fun ChildTaskItem(
                 // Badge for pending tasks
                 if (child.hasPendingTasks) {
                     Badge(
-                        backgroundColor = MaterialTheme.colors.error
+                        containerColor = MaterialTheme.colors.error
                     ) {
                         Text("!")
                     }
@@ -95,7 +102,7 @@ fun ChildTaskItem(
                     label = { Text("Meds", maxLines = 1) },
                     icon = {
                         Icon(
-                            imageVector = Icons.Default.MedicationLiquid,
+                            imageVector = Icons.Default.Medication,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
