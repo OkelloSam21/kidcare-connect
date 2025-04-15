@@ -13,7 +13,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.items
 import androidx.wear.compose.material.*
-import com.example.kidcareconnect.presentation.data.local.entity.Medication
+import com.example.kidcareconnect.data.local.entity.Medication
 import com.example.kidcareconnect.presentation.ui.components.AppIcons
 import com.example.kidcareconnect.presentation.ui.components.ChildCareIcons
 import kotlinx.coroutines.flow.collectLatest
