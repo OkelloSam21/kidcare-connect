@@ -55,4 +55,7 @@ interface ChildDao {
     @Transaction
     @Query("SELECT * FROM children WHERE childId = :childId")
     fun getChildWithHealthLogs(childId: String): Flow<List<ChildWithHealthLogs>>
+
+    @Query("SELECT COUNT (*) FROM children")
+    suspend fun getCount(): Int
 }
