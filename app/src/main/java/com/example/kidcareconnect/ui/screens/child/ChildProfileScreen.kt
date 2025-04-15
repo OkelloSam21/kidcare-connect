@@ -24,7 +24,6 @@ import com.example.kidcareconnect.ui.screens.dashboard.PendingTaskUi
 import kotlinx.coroutines.flow.collectLatest
 
 @RequiresApi(Build.VERSION_CODES.O)
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChildProfileScreen(
     childId: String,
@@ -184,7 +183,6 @@ private fun ChildProfileContent(
                 contentAlignment = Alignment.Center
             ) {
                 if (child.profilePictureUrl != null) {
-                    // Image would go here
                     Text(
                         text = child.name.first().toString(),
                         style = MaterialTheme.typography.headlineMedium,

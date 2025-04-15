@@ -1,6 +1,7 @@
 package com.example.kidcareconnect.ui.screens.child
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -109,7 +110,7 @@ class ChildProfileViewModel @Inject constructor(
     private val mockUserId = "user1"
     
     init {
-        checkUserRole()
+//        checkUserRole()
     }
     
     private fun checkUserRole() {
@@ -137,86 +138,93 @@ class ChildProfileViewModel @Inject constructor(
                 }
                 
                 // Load medications
-                medicationRepository.getMedicationsForChild(childId).collect { medications ->
-                    val medicationUiList = medications.map { medication ->
-                        // Get schedules for each medication to display
-                        val schedules = mutableListOf<String>()
-                        medicationRepository.getSchedulesForMedication(medication.medicationId).collect { scheduleList ->
-                            scheduleList.forEach { schedule ->
-                                schedules.add("${getDaysText(schedule.days)} at ${schedule.time}")
-                            }
+                launch {
+                    medicationRepository.getMedicationsForChild(childId).collect { medications ->
+                        val medicationUiList = medications.map { medication ->
+                            // Get schedules for each medication to display
+                            val schedules = mutableListOf<String>()
+                            medicationRepository.getSchedulesForMedication(medication.medicationId)
+                                .collect { scheduleList ->
+                                    scheduleList.forEach { schedule ->
+                                        schedules.add("${getDaysText(schedule.days)} at ${schedule.time}")
+                                    }
+                                }
+
+                            MedicationUi(
+                                id = medication.medicationId,
+                                name = medication.name,
+                                dosage = medication.dosage,
+                                schedule = schedules.joinToString(", "),
+                                instructions = medication.instructions,
+                                priority = medication.priority.name
+                            )
                         }
-                        
-                        MedicationUi(
-                            id = medication.medicationId,
-                            name = medication.name,
-                            dosage = medication.dosage,
-                            schedule = schedules.joinToString(", "),
-                            instructions = medication.instructions,
-                            priority = medication.priority.name
-                        )
-                    }
-                    
-                    _uiState.update { state ->
-                        state.copy(medications = medicationUiList)
+
+                        _uiState.update { state ->
+                            state.copy(medications = medicationUiList)
+                        }
                     }
                 }
                 
                 // Load dietary plan
-                dietaryRepository.getDietaryPlanForChild(childId).collect { dietaryPlan ->
-                    if (dietaryPlan != null) {
-                        val dietaryPlanUi = DietaryPlanUi(
-                            id = dietaryPlan.planId,
-                            allergies = dietaryPlan.allergies,
-                            restrictions = dietaryPlan.restrictions,
-                            preferences = dietaryPlan.preferences,
-                            notes = dietaryPlan.notes
-                        )
-                        
-                        _uiState.update { state ->
-                            state.copy(dietaryPlan = dietaryPlanUi)
-                        }
-                        
-                        // Load meal logs for this dietary plan
-                        dietaryRepository.getMealLogsForChild(childId).collect { mealLogs ->
-                            val mealLogsUi = mealLogs.map { log ->
-                                MealLogUi(
-                                    id = log.logId,
-                                    mealType = getMealTypeName(log.scheduleId), // We would need to get the meal type from the schedule
-                                    time = formatDateTime(log.scheduledTime),
-                                    status = log.status.name,
-                                    notes = log.notes
-                                )
-                            }
-                            
+                launch {
+                    dietaryRepository.getDietaryPlanForChild(childId).collect { dietaryPlan ->
+                        if (dietaryPlan != null) {
+                            val dietaryPlanUi = DietaryPlanUi(
+                                id = dietaryPlan.planId,
+                                allergies = dietaryPlan.allergies,
+                                restrictions = dietaryPlan.restrictions,
+                                preferences = dietaryPlan.preferences,
+                                notes = dietaryPlan.notes
+                            )
+
                             _uiState.update { state ->
-                                state.copy(mealLogs = mealLogsUi)
+                                state.copy(dietaryPlan = dietaryPlanUi)
+                            }
+
+                            // Load meal logs for this dietary plan
+                            dietaryRepository.getMealLogsForChild(childId).collect { mealLogs ->
+                                val mealLogsUi = mealLogs.map { log ->
+                                    MealLogUi(
+                                        id = log.logId,
+                                        mealType = getMealTypeName(log.scheduleId), // We would need to get the meal type from the schedule
+                                        time = formatDateTime(log.scheduledTime),
+                                        status = log.status.name,
+                                        notes = log.notes
+                                    )
+                                }
+
+                                _uiState.update { state ->
+                                    state.copy(mealLogs = mealLogsUi)
+                                }
                             }
                         }
                     }
                 }
                 
                 // Load health logs
-                healthRepository.getHealthLogsForChild(childId).collect { healthLogs ->
-                    val healthLogsUi = healthLogs.map { log ->
-                        HealthLogUi(
-                            id = log.logId,
-                            date = formatDate(log.loggedAt),
-                            time = formatTime(log.loggedAt),
-                            temperature = log.temperature,
-                            heartRate = log.heartRate,
-                            symptoms = log.symptoms,
-                            notes = log.notes
-                        )
-                    }
-                    
-                    _uiState.update { state ->
-                        state.copy(healthLogs = healthLogsUi)
+                launch {
+                    healthRepository.getHealthLogsForChild(childId).collect { healthLogs ->
+                        val healthLogsUi = healthLogs.map { log ->
+                            HealthLogUi(
+                                id = log.logId,
+                                date = formatDate(log.loggedAt),
+                                time = formatTime(log.loggedAt),
+                                temperature = log.temperature,
+                                heartRate = log.heartRate,
+                                symptoms = log.symptoms,
+                                notes = log.notes
+                            )
+                        }
+
+                        _uiState.update { state ->
+                            state.copy(healthLogs = healthLogsUi)
+                        }
                     }
                 }
                 
                 // Load upcoming tasks (pending medication and meal logs)
-                loadUpcomingTasks(childId)
+               launch { loadUpcomingTasks(childId) }
                 
                 // Load mock notes for now
                 val mockNotes = listOf(
@@ -244,6 +252,7 @@ class ChildProfileViewModel @Inject constructor(
                 }
                 
             } catch (e: Exception) {
+                Log.d("ChildProfileViewModel", "Error loading child data: ${e.message}")
                 _uiState.update { state ->
                     state.copy(
                         isLoading = false,
@@ -288,6 +297,19 @@ class ChildProfileViewModel @Inject constructor(
                 }
                 
                 // TODO: Add meal tasks in similar fashion
+                // For now, we will just add a mock meal task
+                tasks.add(
+                    PendingTaskUi(
+                        id = "meal1",
+                        childId = childId,
+                        childName = _uiState.value.child?.name ?: "",
+                        title = "Prepare lunch",
+                        description = "Lunch time is 12:00 PM",
+                        time = formatDateTime(LocalDateTime.now().plusHours(2)), // Mock time
+                        type = "meal",
+                        priority = 0
+                    )
+                )
                 
                 // Sort tasks by priority (high to low) and then by time
                 val sortedTasks = tasks.sortedWith(
