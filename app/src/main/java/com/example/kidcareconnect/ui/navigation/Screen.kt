@@ -10,6 +10,8 @@ import androidx.navigation.navArgument
 import com.example.kidcareconnect.ui.screens.child.ChildProfileScreen
 import com.example.kidcareconnect.ui.screens.dashboard.DashboardScreen
 import com.example.kidcareconnect.ui.screens.medication.MedicationManagementScreen
+import com.example.kidcareconnect.ui.screens.notifications.NotificationsScreen
+import com.example.kidcareconnect.ui.screens.settings.SettingsScreen
 
 
 // Navigation Routes
@@ -116,16 +118,16 @@ fun SmartChildCareNavHost(
 //            )
         }
         
-//        composable(Screen.Notifications.route) {
-//            NotificationsScreen(
-//                navigateToChildProfile = { childId ->
-//                    navController.navigate(Screen.ChildProfile.createRoute(childId))
-//                },
-//                navigateBack = {
-//                    navController.popBackStack()
-//                }
-//            )
-//        }
+        composable(Screen.Notifications.route) {
+            NotificationsScreen(
+                navigateToChildProfile = { childId ->
+                    navController.navigate(Screen.ChildProfile.createRoute(childId))
+                },
+                navigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
         
 //        composable(
 //            route = Screen.DoctorInput.route,
@@ -142,12 +144,12 @@ fun SmartChildCareNavHost(
 //            )
 //        }
 //
-//        composable(Screen.Settings.route) {
-//            SettingsScreen(
-//                navigateBack = {
-//                    navController.popBackStack()
-//                }
-//            )
-//        }
+        composable(Screen.Settings.route) {
+            SettingsScreen(
+                navigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }
