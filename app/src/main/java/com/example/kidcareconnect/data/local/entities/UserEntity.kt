@@ -19,7 +19,8 @@ data class UserEntity(
     @ColumnInfo(name = "role") val role: UserRole,
     @ColumnInfo(name = "profile_picture_url") val profilePictureUrl: String? = null,
     @ColumnInfo(name = "created_at") val createdAt: LocalDateTime = LocalDateTime.now(),
-    @ColumnInfo(name = "updated_at") val updatedAt: LocalDateTime = LocalDateTime.now()
+    @ColumnInfo(name = "updated_at") val updatedAt: LocalDateTime = LocalDateTime.now(),
+    @ColumnInfo(name = "last_login") val lastLogin: LocalDateTime = LocalDateTime.now()
 )
 
 @RequiresApi(Build.VERSION_CODES.O)

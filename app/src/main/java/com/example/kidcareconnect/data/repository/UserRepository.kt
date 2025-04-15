@@ -42,6 +42,15 @@ class UserRepository @Inject constructor(
         return user
     }
 
+    suspend fun clearUserSession(userId: String) {
+        val user = userDao.getUserById(userId)
+
+
+        if (user != null) {
+            userDao.updateUser(user.copy(lastLogin = user.lastLogin ))
+        }
+    }
+
     suspend fun updateUser(user: UserEntity) = userDao.updateUser(user)
 
     suspend fun deleteUser(user: UserEntity) = userDao.deleteUser(user)

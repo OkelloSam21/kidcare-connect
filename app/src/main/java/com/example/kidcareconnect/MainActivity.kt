@@ -17,9 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.kidcareconnect.data.repository.MockDataProvider
+import com.example.kidcareconnect.data.repository.ThemeRepository
 import com.example.kidcareconnect.ui.components.SmartChildCareBottomBar
 import com.example.kidcareconnect.ui.navigation.Screen
 import com.example.kidcareconnect.ui.navigation.SmartChildCareNavHost
+import com.example.kidcareconnect.ui.screens.settings.rememberThemeController
 import com.example.kidcareconnect.ui.theme.KidcareConnectTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -30,12 +32,17 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var mockDataProvider: MockDataProvider
 
+    @Inject
+    lateinit var themeRepository: ThemeRepository
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
-            KidcareConnectTheme {
+            val isDarkTheme = rememberThemeController(themeRepository)
+            KidcareConnectTheme(darkTheme = isDarkTheme) {
                 SmartChildCareApp(mockDataProvider)
             }
         }
@@ -46,34 +53,17 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun SmartChildCareApp(mockDataProvider: MockDataProvider) {
     val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomBar = when (currentRoute) {
-        Screen.Login.route -> false
-        else -> true
+    Surface(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        SmartChildCareNavHost(
+            navController = navController,
+            mockDataProvider = mockDataProvider
+        )
     }
 
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                SmartChildCareBottomBar(
-                    navController = navController,
-                    currentRoute = currentRoute ?: ""
-                )
-            }
-        }
-    ) { innerPadding ->
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            SmartChildCareNavHost(
-                navController = navController,
-                mockDataProvider = mockDataProvider
-            )
-        }
-    }
 }
