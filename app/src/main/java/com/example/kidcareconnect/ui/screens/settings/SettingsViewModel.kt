@@ -2,8 +2,11 @@ package com.example.kidcareconnect.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.kidcareconnect.data.AuthManager
+import com.example.kidcareconnect.data.repository.ThemeRepository
 import com.example.kidcareconnect.data.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,20 +22,34 @@ data class SettingsUiState(
     val isAdmin: Boolean = false
 )
 
+sealed class SettingsEvent {
+    data object NavigateToLogin : SettingsEvent()
+}
+
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val themeRepository: ThemeRepository,
+    private val authManager: AuthManager
 ) : ViewModel()
 {
     
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
+
+    private val _event = Channel<SettingsEvent> ()
+    val event = _event.receiveAsFlow()
     
     // Mock current user for development
     private val mockUserId = "user1"
     
     init {
         loadUserSettings()
+        viewModelScope.launch {
+            themeRepository.themeFlow.collect { theme ->
+                _uiState.update { it.copy(theme = theme) }
+            }
+        }
     }
     
     private fun loadUserSettings() {
@@ -68,5 +85,16 @@ class SettingsViewModel @Inject constructor(
     
     fun setTheme(theme: String) {
         _uiState.update { it.copy(theme = theme) }
+        viewModelScope.launch {
+            themeRepository.saveThemeSetting(theme)
+        }
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            val userId = authManager.currentUser.value?.userId ?:""
+            userRepository.clearUserSession(userId)
+            authManager.clearCurrentUser()
+        }
     }
 }
