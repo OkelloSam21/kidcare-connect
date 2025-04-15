@@ -3,10 +3,10 @@ package com.example.kidcareconnect.presentation.ui.screen.health
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.wear.compose.foundation.lazy.ScalingLazyListState
-import com.example.kidcareconnect.presentation.data.local.entity.HealthCheck
-import com.example.kidcareconnect.presentation.data.repository.ChildRepository
-import com.example.kidcareconnect.presentation.data.repository.HealthCheckRepository
-import com.example.kidcareconnect.presentation.data.repository.TaskRepository
+import com.example.kidcareconnect.data.local.entity.HealthCheck
+import com.example.kidcareconnect.data.repository.ChildRepository
+import com.example.kidcareconnect.data.repository.HealthCheckRepository
+import com.example.kidcareconnect.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
