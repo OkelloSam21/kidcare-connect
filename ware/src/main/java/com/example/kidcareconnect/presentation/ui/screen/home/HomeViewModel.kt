@@ -1,11 +1,11 @@
-package com.example.kidcareconnect.presentation.ui.screen
+package com.example.kidcareconnect.presentation.ui.screen.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.kidcareconnect.presentation.data.model.ChildUi
 import com.example.kidcareconnect.presentation.data.model.PendingTaskUi
-import com.example.kidcareconnect.wearos.data.repository.ChildRepository
-import com.example.kidcareconnect.wearos.data.repository.TaskRepository
+import com.example.kidcareconnect.presentation.data.repository.ChildRepository
+import com.example.kidcareconnect.presentation.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -112,6 +112,12 @@ class HomeViewModel @Inject constructor(
     fun onMealTaskSelected(task: PendingTaskUi) {
         viewModelScope.launch {
             _events.send(HomeScreenEvent.NavigateToMeal(task.childId))
+        }
+    }
+
+    fun onHealthTaskSelected(task: PendingTaskUi) {
+        viewModelScope.launch {
+            _events.send(HomeScreenEvent.NavigateToHealth(task.childId))
         }
     }
 }
