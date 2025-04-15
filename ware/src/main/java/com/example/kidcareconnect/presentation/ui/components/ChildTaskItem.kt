@@ -14,7 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
-import com.example.kidcareconnect.presentation.data.model.ChildUi
+import com.example.kidcareconnect.data.model.ChildUi
 
 @Composable
 fun ChildTaskItem(

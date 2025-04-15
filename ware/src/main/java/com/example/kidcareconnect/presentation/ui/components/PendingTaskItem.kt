@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
-import com.example.kidcareconnect.presentation.data.model.PendingTaskUi
+import com.example.kidcareconnect.data.model.PendingTaskUi
 
 @Composable
 fun PendingTaskItem(
