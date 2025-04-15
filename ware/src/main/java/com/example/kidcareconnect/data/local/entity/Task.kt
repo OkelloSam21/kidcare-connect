@@ -1,4 +1,4 @@
-package com.example.kidcareconnect.presentation.data.local.entity
+package com.example.kidcareconnect.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

@@ -1,19 +1,19 @@
-package com.example.kidcareconnect.presentation.data.local
+package com.example.kidcareconnect.data.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.kidcareconnect.presentation.data.local.dao.ChildDao
-import com.example.kidcareconnect.presentation.data.local.dao.HealthCheckDao
-import com.example.kidcareconnect.presentation.data.local.dao.MealDao
-import com.example.kidcareconnect.presentation.data.local.dao.MedicationDao
-import com.example.kidcareconnect.presentation.data.local.dao.TaskDao
-import com.example.kidcareconnect.presentation.data.local.entity.Child
-import com.example.kidcareconnect.presentation.data.local.entity.HealthCheck
-import com.example.kidcareconnect.presentation.data.local.entity.Meal
-import com.example.kidcareconnect.presentation.data.local.entity.Medication
-import com.example.kidcareconnect.presentation.data.local.entity.Task
+import com.example.kidcareconnect.data.local.dao.ChildDao
+import com.example.kidcareconnect.data.local.dao.HealthCheckDao
+import com.example.kidcareconnect.data.local.dao.MealDao
+import com.example.kidcareconnect.data.local.dao.MedicationDao
+import com.example.kidcareconnect.data.local.dao.TaskDao
+import com.example.kidcareconnect.data.local.entity.Child
+import com.example.kidcareconnect.data.local.entity.HealthCheck
+import com.example.kidcareconnect.data.local.entity.Meal
+import com.example.kidcareconnect.data.local.entity.Medication
+import com.example.kidcareconnect.data.local.entity.Task
 
 @Database(
     entities = [

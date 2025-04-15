@@ -1,4 +1,4 @@
-package com.example.kidcareconnect.presentation.data.model
+package com.example.kidcareconnect.data.model
 
 data class ChildUi(
     val id: String,

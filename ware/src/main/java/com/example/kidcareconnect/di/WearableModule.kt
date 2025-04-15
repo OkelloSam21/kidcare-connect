@@ -1,4 +1,4 @@
-package com.example.kidcareconnect.presentation.di
+package com.example.kidcareconnect.di
 
 import android.content.Context
 import com.google.android.gms.wearable.DataClient

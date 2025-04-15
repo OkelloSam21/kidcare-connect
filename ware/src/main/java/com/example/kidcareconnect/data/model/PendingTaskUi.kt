@@ -1,4 +1,4 @@
-package com.example.kidcareconnect.presentation.data.model
+package com.example.kidcareconnect.data.model
 
 data class PendingTaskUi(
     val id: String,

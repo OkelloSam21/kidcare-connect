@@ -1,7 +1,7 @@
-package com.example.kidcareconnect.presentation.data.repository
+package com.example.kidcareconnect.data.repository
 
-import com.example.kidcareconnect.presentation.data.local.dao.ChildDao
-import com.example.kidcareconnect.presentation.data.model.ChildUi
+import com.example.kidcareconnect.data.local.dao.ChildDao
+import com.example.kidcareconnect.data.model.ChildUi
 import com.google.android.gms.wearable.DataClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map

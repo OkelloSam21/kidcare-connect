@@ -1,7 +1,7 @@
-package com.example.kidcareconnect.presentation.data.repository
+package com.example.kidcareconnect.data.repository
 
-import com.example.kidcareconnect.presentation.data.local.dao.HealthCheckDao
-import com.example.kidcareconnect.presentation.data.local.entity.HealthCheck
+import com.example.kidcareconnect.data.local.dao.HealthCheckDao
+import com.example.kidcareconnect.data.local.entity.HealthCheck
 import kotlinx.coroutines.flow.Flow
 import java.util.UUID
 import javax.inject.Inject

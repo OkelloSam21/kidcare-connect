@@ -1,11 +1,11 @@
-package com.example.kidcareconnect.presentation.data.local.entity
+package com.example.kidcareconnect.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 
 @Entity(
-    tableName = "meals",
+    tableName = "medications",
     foreignKeys = [
         ForeignKey(
             entity = Child::class,
@@ -15,13 +15,15 @@ import androidx.room.PrimaryKey
         )
     ]
 )
-data class Meal(
+data class Medication(
     @PrimaryKey
     val id: String,
     val childId: String,
-    val mealType: String, // breakfast, lunch, dinner, snack
+    val name: String,
+    val dosage: String,
     val time: Long,
-    val dietaryRestrictions: String?,
-    val allergies: String?,
-    val lastServed: Long?
+    val frequency: String, // daily, twice_daily, etc.
+    val instructions: String?,
+    val isCritical: Boolean,
+    val lastAdministered: Long?
 )

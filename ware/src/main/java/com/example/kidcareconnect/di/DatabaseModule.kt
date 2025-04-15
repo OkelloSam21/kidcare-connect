@@ -1,12 +1,12 @@
-package com.example.kidcareconnect.presentation.di
+package com.example.kidcareconnect.di
 
 import android.content.Context
-import com.example.kidcareconnect.presentation.data.local.AppDatabase
-import com.example.kidcareconnect.presentation.data.local.dao.ChildDao
-import com.example.kidcareconnect.presentation.data.local.dao.HealthCheckDao
-import com.example.kidcareconnect.presentation.data.local.dao.MealDao
-import com.example.kidcareconnect.presentation.data.local.dao.MedicationDao
-import com.example.kidcareconnect.presentation.data.local.dao.TaskDao
+import com.example.kidcareconnect.data.local.AppDatabase
+import com.example.kidcareconnect.data.local.dao.ChildDao
+import com.example.kidcareconnect.data.local.dao.HealthCheckDao
+import com.example.kidcareconnect.data.local.dao.MealDao
+import com.example.kidcareconnect.data.local.dao.MedicationDao
+import com.example.kidcareconnect.data.local.dao.TaskDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -1,15 +1,15 @@
-package com.example.kidcareconnect.presentation.di
+package com.example.kidcareconnect.di
 
-import com.example.kidcareconnect.presentation.data.local.dao.ChildDao
-import com.example.kidcareconnect.presentation.data.local.dao.HealthCheckDao
-import com.example.kidcareconnect.presentation.data.local.dao.MealDao
-import com.example.kidcareconnect.presentation.data.local.dao.MedicationDao
-import com.example.kidcareconnect.presentation.data.local.dao.TaskDao
-import com.example.kidcareconnect.presentation.data.repository.ChildRepository
-import com.example.kidcareconnect.presentation.data.repository.HealthCheckRepository
-import com.example.kidcareconnect.presentation.data.repository.MealRepository
-import com.example.kidcareconnect.presentation.data.repository.MedicationRepository
-import com.example.kidcareconnect.presentation.data.repository.TaskRepository
+import com.example.kidcareconnect.data.local.dao.ChildDao
+import com.example.kidcareconnect.data.local.dao.HealthCheckDao
+import com.example.kidcareconnect.data.local.dao.MealDao
+import com.example.kidcareconnect.data.local.dao.MedicationDao
+import com.example.kidcareconnect.data.local.dao.TaskDao
+import com.example.kidcareconnect.data.repository.ChildRepository
+import com.example.kidcareconnect.data.repository.HealthCheckRepository
+import com.example.kidcareconnect.data.repository.MealRepository
+import com.example.kidcareconnect.data.repository.MedicationRepository
+import com.example.kidcareconnect.data.repository.TaskRepository
 import com.google.android.gms.wearable.DataClient
 import dagger.Module
 import dagger.Provides
