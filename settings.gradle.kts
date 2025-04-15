@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "kidcare Connect"
 include(":app")
+include(":ware")
