@@ -51,10 +51,16 @@ dependencies {
     implementation(libs.androidx.compose.foundation)
     implementation(libs.androidx.wear.tooling.preview)
     implementation(libs.androidx.compose.navigation)
-//    implementation(libs.androidx.compose.material.v141)
+
+    implementation (libs.androidx.material.icons.core)
+    implementation (libs.androidx.compose.material.icons.extended)
 
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.lifecycle.service)
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.material3.android)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
@@ -62,7 +68,7 @@ dependencies {
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
-
+    implementation (libs.kotlinx.coroutines.play.services)
     // Hilt for DI
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
