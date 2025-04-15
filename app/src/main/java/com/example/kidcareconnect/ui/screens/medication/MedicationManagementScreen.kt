@@ -365,7 +365,6 @@ fun MedicationManagementScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddMedicationDialog(
     onDismiss: () -> Unit,
