@@ -1,14 +1,22 @@
-// Navigation Setup for Smart Child Care App
 package com.example.kidcareconnect.ui.navigation
 
+import android.os.Build
+import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.kidcareconnect.data.repository.MockDataProvider
 import com.example.kidcareconnect.ui.screens.child.ChildProfileScreen
 import com.example.kidcareconnect.ui.screens.dashboard.DashboardScreen
+import com.example.kidcareconnect.ui.screens.doctor.DoctorInputScreen
+import com.example.kidcareconnect.ui.screens.login.LoginScreen
+import com.example.kidcareconnect.ui.screens.meal.MealPlanningScreen
 import com.example.kidcareconnect.ui.screens.medication.MedicationManagementScreen
 import com.example.kidcareconnect.ui.screens.notifications.NotificationsScreen
 import com.example.kidcareconnect.ui.screens.settings.SettingsScreen
@@ -34,22 +42,28 @@ sealed class Screen(val route: String) {
     object Settings : Screen("settings")
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SmartChildCareNavHost(
     navController: NavHostController,
-    startDestination: String = Screen.Dashboard.route) {
+    mockDataProvider: MockDataProvider,
+    startDestination: String = Screen.Login.route
+) {
+    // Initialize mock data when the app starts
+    LaunchedEffect(key1 = true) {
+        mockDataProvider.initializeMockData()
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
-//        composable(Screen.Login.route) {
-//            LoginScreen(navigateToDashboard = {
-//                navController.navigate(Screen.Dashboard.route) {
-//                    popUpTo(Screen.Login.route) { inclusive = true }
-//                }
-//            })
-//        }
-        
+        composable(Screen.Login.route) {
+            LoginScreen(navigateToDashboard = {
+                navController.navigate(Screen.Dashboard.route)
+            })
+        }
+
         composable(Screen.Dashboard.route) {
             DashboardScreen(
                 navigateToChildProfile = { childId ->
@@ -63,7 +77,7 @@ fun SmartChildCareNavHost(
                 }
             )
         }
-        
+
         composable(
             route = Screen.ChildProfile.route,
             arguments = listOf(
@@ -71,6 +85,7 @@ fun SmartChildCareNavHost(
             )
         ) { backStackEntry ->
             val childId = backStackEntry.arguments?.getString("childId") ?: ""
+            Log.d("CHildProfile", "Child ID: $childId")
             ChildProfileScreen(
                 childId = childId,
                 navigateToMedication = {
@@ -87,7 +102,7 @@ fun SmartChildCareNavHost(
                 }
             )
         }
-        
+
         composable(
             route = Screen.Medication.route,
             arguments = listOf(
@@ -102,7 +117,7 @@ fun SmartChildCareNavHost(
                 }
             )
         }
-        
+
         composable(
             route = Screen.MealPlanning.route,
             arguments = listOf(
@@ -110,14 +125,14 @@ fun SmartChildCareNavHost(
             )
         ) { backStackEntry ->
             val childId = backStackEntry.arguments?.getString("childId") ?: ""
-//            MealPlanningScreen(
-//                childId = childId,
-//                navigateBack = {
-//                    navController.popBackStack()
-//                }
-//            )
+            MealPlanningScreen(
+                childId = childId,
+                navigateBack = {
+                    navController.popBackStack()
+                }
+            )
         }
-        
+
         composable(Screen.Notifications.route) {
             NotificationsScreen(
                 navigateToChildProfile = { childId ->
@@ -128,26 +143,35 @@ fun SmartChildCareNavHost(
                 }
             )
         }
-        
-//        composable(
-//            route = Screen.DoctorInput.route,
-//            arguments = listOf(
-//                navArgument("childId") { type = NavType.StringType }
-//            )
-//        ) { backStackEntry ->
-//            val childId = backStackEntry.arguments?.getString("childId") ?: ""
-//            DoctorInputScreen(
-//                childId = childId,
-//                navigateBack = {
-//                    navController.popBackStack()
-//                }
-//            )
-//        }
-//
+
+        composable(
+            route = Screen.DoctorInput.route,
+            arguments = listOf(
+                navArgument("childId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val childId = backStackEntry.arguments?.getString("childId") ?: ""
+            DoctorInputScreen(
+                childId = childId,
+                navigateBack = {
+                    navController.popBackStack()
+                }
+            )
+        }
+
         composable(Screen.Settings.route) {
             SettingsScreen(
                 navigateBack = {
                     navController.popBackStack()
+                },
+                navigateToLogin = {
+                    navController.navigate(
+                        route = Screen.Login.route,
+                    ){
+                        popUpTo(0) {
+                            inclusive = true
+                        }
+                    }
                 }
             )
         }
