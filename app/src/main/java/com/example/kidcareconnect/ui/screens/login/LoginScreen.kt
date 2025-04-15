@@ -76,7 +76,6 @@ fun LoginScreen(
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // App Logo/Icon
             Icon(
                 imageVector = Icons.Default.ChildCare,
                 contentDescription = "App Logo",
@@ -95,8 +94,7 @@ fun LoginScreen(
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(top = 8.dp, bottom = 32.dp)
             )
-            
-            // Email Field
+
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
@@ -112,8 +110,7 @@ fun LoginScreen(
             )
             
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Password Field
+
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
