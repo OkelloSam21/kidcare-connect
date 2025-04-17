@@ -5,7 +5,9 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.kidcareconnect.data.AuthManager
 import com.example.kidcareconnect.data.local.entities.Child
+import com.example.kidcareconnect.data.local.entities.UserEntity
 import com.example.kidcareconnect.data.model.MedicationPriority
 import com.example.kidcareconnect.data.model.UserRole
 import com.example.kidcareconnect.data.repository.ChildRepository
@@ -78,6 +80,8 @@ data class NoteUi(
 
 // UI State for Child Profile
 data class ChildProfileUiState(
+    val currentUser: UserEntity? = null,
+    val currentUserRole: UserRole = UserRole.CARETAKER,
     val child: Child? = null,
     val medications: List<MedicationUi> = emptyList(),
     val dietaryPlan: DietaryPlanUi? = null,
@@ -97,32 +101,77 @@ class ChildProfileViewModel @Inject constructor(
     private val childRepository: ChildRepository,
     private val medicationRepository: MedicationRepository,
     private val dietaryRepository: DietaryRepository,
-    private val healthRepository: HealthRepository
+    private val healthRepository: HealthRepository,
+    private val authManager: AuthManager
 ) : ViewModel() {
-    
+    private val TAG = "ChildProfileViewModel"
     private val _uiState = MutableStateFlow(ChildProfileUiState())
     val uiState: StateFlow<ChildProfileUiState> = _uiState.asStateFlow()
     
     private val _events = Channel<ChildProfileEvent>()
     val events = _events.receiveAsFlow()
-    
-    // Mock current user for development
-    private val mockUserId = "user1"
+
     
     init {
-//        checkUserRole()
+        loadCurrentUser()
     }
-    
-    private fun checkUserRole() {
+
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun loadCurrentUser() {
         viewModelScope.launch {
-            val user = userRepository.getUserById(mockUserId)
-            user?.let {
-                _uiState.update { state ->
-                    state.copy(isAdmin = it.role == UserRole.ADMIN)
+            try {
+                Log.d(TAG, "Loading current user from AuthManager")
+
+                // Get current user from AuthManager
+                val currentUser = authManager.currentUser.value
+                val currentUserRole = authManager.currentUserRole.value
+
+                if (currentUser != null) {
+                    Log.d(TAG, "Current user: ${currentUser.name} with role $currentUserRole")
+
+                    _uiState.update { state ->
+                        state.copy(
+                            currentUser = currentUser,
+                            currentUserRole = currentUserRole,
+                            isLoading = true
+                        )
+                    }
+
+                    // Now that we have the user, load children and notifications
+                   loadChildData(_uiState.value.child?.childId ?: "")
+                } else {
+                    Log.w(TAG, "No authenticated user found in AuthManager")
+                    // Try to find any user as fallback
+                    val allUsers = userRepository.getAllUsers().firstOrNull() ?: emptyList()
+                    if (allUsers.isNotEmpty()) {
+                        val user = allUsers.first()
+                        Log.w(TAG, "Using fallback user: ${user.name} with role ${user.role}")
+                        _uiState.update { state ->
+                            state.copy(
+                                currentUser = user,
+                                currentUserRole = user.role,
+                                isLoading = true
+                            )
+                        }
+
+                    } else {
+                        Log.e(TAG, "No users found in database")
+                        _uiState.update { it.copy(isLoading = false) }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading user", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Failed to load user: ${e.message}"
+                    )
                 }
             }
         }
     }
+
     
     fun loadChildData(childId: String) {
         viewModelScope.launch {
@@ -411,6 +460,7 @@ class ChildProfileViewModel @Inject constructor(
     fun onAddMedicationClicked() {
         viewModelScope.launch {
             _events.send(ChildProfileEvent.NavigateToMedication)
+
         }
     }
     

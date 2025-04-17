@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.kidcareconnect.data.local.entities.Child
+import com.example.kidcareconnect.data.model.UserRole
 import com.example.kidcareconnect.ui.components.SmartChildCareTopBar
 import com.example.kidcareconnect.ui.components.TaskCard
 import com.example.kidcareconnect.ui.screens.dashboard.PendingTaskUi
@@ -72,39 +73,41 @@ fun ChildProfileScreen(
             )
         },
         floatingActionButton = {
-            when(selectedTabIndex) {
-                0 -> { // Medications tab
-                    if (uiState.isAdmin) {
+            if (uiState.currentUserRole == UserRole.ADMIN) {
+                when (selectedTabIndex) {
+                    0 -> { // Medications tab
                         FloatingActionButton(
                             onClick = { viewModel.onAddMedicationClicked() }
                         ) {
                             Icon(Icons.Default.Add, "Add medication")
                         }
+
                     }
-                }
-                1 -> { // Meals tab
-                    if (uiState.isAdmin) {
+
+                    1 -> { // Meals tab
                         FloatingActionButton(
                             onClick = { viewModel.onAddMealClicked() }
                         ) {
                             Icon(Icons.Default.Add, "Add meal plan")
                         }
+
                     }
-                }
-                2 -> { // Health tab
-                    FloatingActionButton(
-                        onClick = { viewModel.onAddHealthLogClicked() }
-                    ) {
-                        Icon(Icons.Default.Add, "Add health log")
+
+                    2 -> { // Health tab
+                        FloatingActionButton(
+                            onClick = { viewModel.onAddHealthLogClicked() }
+                        ) {
+                            Icon(Icons.Default.Add, "Add health log")
+                        }
                     }
-                }
-                3 -> { // Notes tab
-                    if (uiState.isAdmin) {
+
+                    3 -> { // Notes tab
                         FloatingActionButton(
                             onClick = { viewModel.onAddNoteClicked() }
                         ) {
                             Icon(Icons.Default.Add, "Add note")
                         }
+
                     }
                 }
             }
@@ -293,15 +296,18 @@ private fun ChildProfileContent(
                 medications = uiState.medications,
                 onMedicationClick = onMedicationSelected
             )
+
             1 -> MealsTab(
                 dietaryPlan = uiState.dietaryPlan,
                 mealLogs = uiState.mealLogs,
                 onMealClick = onMealSelected
             )
+
             2 -> HealthTab(
                 healthLogs = uiState.healthLogs,
                 onHealthLogClick = onHealthLogSelected
             )
+
             3 -> NotesTab(
                 notes = uiState.notes,
                 onNoteClick = onNoteSelected
