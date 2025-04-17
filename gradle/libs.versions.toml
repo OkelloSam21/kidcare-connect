@@ -3,6 +3,7 @@ agp = "8.9.1"
 composeMaterialVersion = "1.4.1"
 composeNavigation = "1.4.1"
 datastorePreferences = "1.1.4"
+desugar_jdk_libs_configuration_minimal = "2.1.5"
 healthServicesClient = "1.0.0-rc02"
 hiltAndroid = "2.55"
 hiltNavigationCompose = "1.2.0"
@@ -43,6 +44,7 @@ androidx-material-icons-core = { module = "androidx.compose.material:material-ic
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntime" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomRuntime" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntime" }
+desugar_jdk_libs_configuration_minimal = { module = "com.android.tools:desugar_jdk_libs_configuration_minimal", version.ref = "desugar_jdk_libs_configuration_minimal" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
