@@ -17,7 +17,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -34,13 +33,10 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
@@ -61,16 +57,18 @@ fun AddChildDialog(
 
     val dateError by remember { mutableStateOf(false) }
 
-    // Store the date as LocalDate
+// Initialize with non-null LocalDate
     var selectedDate by remember { mutableStateOf(LocalDate.now()) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     // Format for display
     val dateFormatter = remember { DateTimeFormatter.ofPattern("MM/dd/yyyy") }
-    val dateDisplayValue = remember(selectedDate) {
-        selectedDate.format(dateFormatter)
-    }
-    val datePickerState = rememberDatePickerState()
+    val dateDisplayValue = selectedDate.format(dateFormatter)
+
+    // Initialize date picker with current selection
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedDate.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+    )
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -127,14 +125,6 @@ fun AddChildDialog(
                             }
                     )
 
-                    if (showDatePicker) {
-                        DatePickerModal(
-                            onDateSelected = { millis -> selectedDate = millis?.let { LocalDate.ofEpochDay(it/(24 * 60 * 1000)) ?: LocalDate.now() } },
-                            onDismiss = { showDatePicker = false },
-                            state = datePickerState
-                        )
-                    }
-
                     OutlinedTextField(
                         value = bloodGroup,
                         onValueChange = { bloodGroup = it },
@@ -167,7 +157,7 @@ fun AddChildDialog(
                     if (name.isNotBlank() && !dateError && dateOfBirth != null) {
                         onAddChild(
                             name,
-                            dateOfBirth,
+                            selectedDate,
                             gender,
                             bloodGroup,
                             emergencyContact,
@@ -187,38 +177,34 @@ fun AddChildDialog(
             }
         }
     )
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DatePickerModal(
-    onDateSelected: (Long?) -> Unit,
-    onDismiss: () -> Unit,
-    state: DatePickerState
-) {
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                onDateSelected(state.selectedDateMillis)
-                onDismiss()
-            }) {
-                Text("OK")
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Correctly convert milliseconds to LocalDate
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        selectedDate = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
             }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
+        ) {
+            DatePicker(state = datePickerState)
         }
-    ) {
-        DatePicker(state = state)
     }
 }
 
-fun convertMillisToDate(millis: Long): String {
-    val formatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
-    return Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate().format(formatter)
-}
 
 
