@@ -56,6 +56,7 @@ data class DashboardUiState(
     val myAssignedChildren: List<Child> = emptyList(),
     val pendingTasks: List<PendingTaskUi> = emptyList(),
     val unreadNotificationsCount: Int = 0,
+    val showAddChildDialog: Boolean = false,
     val isLoading: Boolean = true,
     val errorMessage: String? = null
 )
@@ -296,10 +297,48 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
-    fun onAddChildClicked() {
-        // In a real app, this would navigate to an add child form
+    fun toggleAddChildDialog(show: Boolean = true) {
         viewModelScope.launch {
-            _events.send(DashboardEvent.ShowMessage("Add child functionality to be implemented"))
+            _uiState.update { state ->
+                state.copy(showAddChildDialog = show)
+            }
+        }
+    }
+
+    fun onAddChildClicked() {
+        toggleAddChildDialog()
+    }
+
+    fun createNewChild(
+        name:String,
+        dateOfBirth: LocalDate,
+        gender: String,
+        bloodGroup: String,
+        emergencyContact: String,
+        note: String
+    ) {
+        viewModelScope.launch {
+            try {
+
+                childRepository.createChild(
+                    name = name,
+                    dateOfBirth = dateOfBirth,
+                    gender = gender,
+                    bloodGroup = bloodGroup,
+                    emergencyContact = emergencyContact,
+                    notes = note,
+                )
+
+                _events.send(DashboardEvent.ShowMessage("Child added successfully"))
+
+                val currentUserId = _uiState.value.currentUser?.userId ?: return@launch
+
+                val currentUserRole = _uiState.value.currentUserRole
+
+                loadChildren(currentUserId, currentUserRole)
+            } catch (e: Exception) {
+                _events.send(DashboardEvent.ShowMessage("Failed to add Child: ${e.message}"))
+            }
         }
     }
 

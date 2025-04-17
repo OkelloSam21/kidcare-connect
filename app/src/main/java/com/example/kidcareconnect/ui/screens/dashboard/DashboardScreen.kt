@@ -16,8 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.kidcareconnect.data.model.UserRole
+import com.example.kidcareconnect.ui.components.AddChildDialog
 import com.example.kidcareconnect.ui.components.ChildListItem
 import com.example.kidcareconnect.ui.components.SmartChildCareTopBar
 import com.example.kidcareconnect.ui.components.TaskCard
@@ -32,7 +34,7 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val showMyChildrenOnly = remember { mutableStateOf(true) } // Default to showing only assigned children
+    val showMyChildrenOnly = remember { mutableStateOf(true) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     // Update showMyChildrenOnly based on user role
@@ -81,6 +83,34 @@ fun DashboardScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            if(uiState.currentUserRole == UserRole.ADMIN) {
+                FloatingActionButton(
+                    onClick = { viewModel.toggleAddChildDialog(true) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(72.dp)
+                ) {
+                    Column (
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ){
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Add Child",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(24.dp)
+                        )
+
+                        Text(
+                            text = "Add Child",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 12.sp
+                            ),
+                            modifier = Modifier
+                        )
+                    }
+                }
+            }
         },
         bottomBar = {
             NavigationBar {
@@ -364,33 +394,25 @@ fun DashboardScreen(
                                 onClick = { viewModel.onChildSelected(child.childId) }
                             )
                         }
-
-                        // Add Child button for Admin
-                        if (uiState.currentUserRole == UserRole.ADMIN) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Button(
-                                        onClick = { viewModel.onAddChildClicked() }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Add,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Add Child")
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
             }
         }
+    }
+
+    if (uiState.showAddChildDialog) {
+        AddChildDialog(
+            onDismiss = { viewModel.toggleAddChildDialog(false) },
+            onAddChild = { name, dob, gender, bloodGroup, emergencyContact, notes ->
+                viewModel.createNewChild(
+                    name = name,
+                    dateOfBirth = dob,
+                    gender = gender,
+                    bloodGroup = bloodGroup,
+                    emergencyContact = emergencyContact,
+                    note = notes
+                )
+            }
+        )
     }
 }
