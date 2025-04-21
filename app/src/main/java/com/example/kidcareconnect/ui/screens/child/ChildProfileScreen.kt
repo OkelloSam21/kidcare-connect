@@ -3,14 +3,49 @@ package com.example.kidcareconnect.ui.screens.child
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Notes
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +70,7 @@ fun ChildProfileScreen(
     viewModel: ChildProfileViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var selectedTabIndex by remember { mutableStateOf(0) }
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
     val tabs = listOf("Medications", "Meals", "Health", "Notes")
 
     LaunchedEffect(key1 = childId) {
@@ -251,7 +286,7 @@ private fun ChildProfileContent(
                                     "medication" -> Icons.Default.Medication
                                     "meal" -> Icons.Default.Restaurant
                                     "health" -> Icons.Default.HealthAndSafety
-                                    else -> Icons.Default.Assignment
+                                    else -> Icons.AutoMirrored.Filled.Assignment
                                 },
                                 contentDescription = null,
                                 tint = MaterialTheme.colorScheme.primary
@@ -280,7 +315,7 @@ private fun ChildProfileContent(
                                 0 -> Icons.Default.Medication
                                 1 -> Icons.Default.Restaurant
                                 2 -> Icons.Default.HealthAndSafety
-                                3 -> Icons.Default.Notes
+                                3 -> Icons.AutoMirrored.Filled.Notes
                                 else -> Icons.Default.Info
                             },
                             contentDescription = null
@@ -675,7 +710,7 @@ fun NotesTab(
 ) {
     if (notes.isEmpty()) {
         EmptyTabContent(
-            icon = Icons.Default.Notes,
+            icon = Icons.AutoMirrored.Filled.Notes,
             message = "No notes available"
         )
     } else {
