@@ -10,7 +10,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.PlaylistAddCheck
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.PlaylistAddCheck
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -400,7 +402,7 @@ fun MealScheduleItem(
             
             IconButton(onClick = onClick) {
                 Icon(
-                    imageVector = Icons.Default.PlaylistAddCheck,
+                    imageVector = Icons.AutoMirrored.Filled.PlaylistAddCheck,
                     contentDescription = "Log Meal"
                 )
             }

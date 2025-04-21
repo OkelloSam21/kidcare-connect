@@ -1,16 +1,43 @@
 package com.example.kidcareconnect.ui.components
 
-import androidx.compose.foundation.layout.*
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.kidcareconnect.ui.navigation.Screen
+import com.example.kidcareconnect.ui.screens.notifications.NotificationsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,7 +47,7 @@ fun SmartChildCareTopBar(
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
-        title = { 
+        title = {
             Text(
                 text = title,
                 maxLines = 1,
@@ -31,7 +58,7 @@ fun SmartChildCareTopBar(
             if (onBackClick != null) {
                 IconButton(onClick = onBackClick) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back"
                     )
                 }
@@ -41,11 +68,18 @@ fun SmartChildCareTopBar(
     )
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun SmartChildCareBottomBar(
     navController: NavController,
-    currentRoute: String
+    notificationsViewModel: NotificationsViewModel? = null
 ) {
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route ?: ""
+
+    // Get unread notification count
+    val unreadCount = notificationsViewModel?.uiState?.collectAsState()?.value?.unreadCount ?: 0
+
     NavigationBar {
         NavigationBarItem(
             icon = { Icon(Icons.Default.Home, contentDescription = "Dashboard") },
@@ -59,9 +93,19 @@ fun SmartChildCareBottomBar(
                 }
             }
         )
-        
+
         NavigationBarItem(
-            icon = { Icon(Icons.Default.Notifications, contentDescription = "Notifications") },
+            icon = {
+                BadgedBox(
+                    badge = {
+                        if (unreadCount > 0) {
+                            Badge { Text(unreadCount.toString()) }
+                        }
+                    }
+                ) {
+                    Icon(Icons.Default.Notifications, contentDescription = "Notifications")
+                }
+            },
             label = { Text("Alerts") },
             selected = currentRoute == Screen.Notifications.route,
             onClick = {
@@ -70,7 +114,7 @@ fun SmartChildCareBottomBar(
                 }
             }
         )
-        
+
         NavigationBarItem(
             icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
             label = { Text("Settings") },
@@ -175,8 +219,8 @@ fun ChildListItem(
                     }
                 }
             }
-            
-            Column(
+
+            Column (
                 modifier = Modifier
                     .padding(start = 16.dp)
                     .weight(1f)
