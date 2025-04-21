@@ -8,7 +8,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -112,28 +114,28 @@ fun DashboardScreen(
                 }
             }
         },
-        bottomBar = {
-            NavigationBar {
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Dashboard") },
-                    label = { Text("Dashboard") },
-                    selected = true,
-                    onClick = {}
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Notifications, contentDescription = "Notifications") },
-                    label = { Text("Alerts") },
-                    selected = false,
-                    onClick = navigateToNotifications
-                )
-                NavigationBarItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                    label = { Text("Settings") },
-                    selected = false,
-                    onClick = navigateToSettings
-                )
-            }
-        },
+//        bottomBar = {
+//            NavigationBar {
+//                NavigationBarItem(
+//                    icon = { Icon(Icons.Default.Home, contentDescription = "Dashboard") },
+//                    label = { Text("Dashboard") },
+//                    selected = true,
+//                    onClick = {}
+//                )
+//                NavigationBarItem(
+//                    icon = { Icon(Icons.Default.Notifications, contentDescription = "Notifications") },
+//                    label = { Text("Alerts") },
+//                    selected = false,
+//                    onClick = navigateToNotifications
+//                )
+//                NavigationBarItem(
+//                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
+//                    label = { Text("Settings") },
+//                    selected = false,
+//                    onClick = navigateToSettings
+//                )
+//            }
+//        },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { innerPadding ->
         Column(
@@ -160,31 +162,6 @@ fun DashboardScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    // User role indicator
-//                    Chip(
-//                        onClick = { },
-//                        colors = ChipDefaults.chipColors(
-//                            containerColor = if (uiState.currentUserRole == UserRole.ADMIN)
-//                                MaterialTheme.colorScheme.primary
-//                            else
-//                                MaterialTheme.colorScheme.secondary
-//                        ),
-//                        leadingIcon = {
-//                            Icon(
-//                                imageVector = if (uiState.currentUserRole == UserRole.ADMIN)
-//                                    Icons.Default.AdminPanelSettings
-//                                else
-//                                    Icons.Default.HealthAndSafety,
-//                                contentDescription = null,
-//                                tint = MaterialTheme.colorScheme.onPrimary
-//                            )
-//                        }
-//                    ) {
-//                        Text(
-//                            text = if (uiState.currentUserRole == UserRole.ADMIN) "Admin" else "Caretaker",
-//                            color = MaterialTheme.colorScheme.onPrimary
-//                        )
-//                    }
                 }
             }
 
@@ -245,7 +222,7 @@ fun DashboardScreen(
                                             "medication" -> Icons.Default.Medication
                                             "meal" -> Icons.Default.Restaurant
                                             "health" -> Icons.Default.HealthAndSafety
-                                            else -> Icons.Default.Assignment
+                                            else -> Icons.AutoMirrored.Filled.Assignment
                                         },
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary
