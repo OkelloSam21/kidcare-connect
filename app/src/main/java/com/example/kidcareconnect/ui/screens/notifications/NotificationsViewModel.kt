@@ -4,6 +4,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.kidcareconnect.data.AuthManager
+import com.example.kidcareconnect.data.repository.ChildRepository
 import com.example.kidcareconnect.data.repository.NotificationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -38,7 +40,6 @@ enum class NotificationType {
                 else -> SYSTEM
             }
         }
-
     }
 }
 
@@ -51,6 +52,7 @@ sealed class NotificationEvent {
 // UI State for Notifications Screen
 data class NotificationsUiState(
     val notifications: List<NotificationUi> = emptyList(),
+    val unreadCount: Int = 0,
     val isLoading: Boolean = true,
     val errorMessage: String? = null
 )
@@ -58,7 +60,9 @@ data class NotificationsUiState(
 @HiltViewModel
 @RequiresApi(Build.VERSION_CODES.O)
 class NotificationsViewModel @Inject constructor(
-    private val notificationRepository: NotificationRepository
+    private val notificationRepository: NotificationRepository,
+    private val childRepository: ChildRepository,
+    private val authManager: AuthManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(NotificationsUiState())
@@ -66,9 +70,6 @@ class NotificationsViewModel @Inject constructor(
 
     private val _events = Channel<NotificationEvent>()
     val events = _events.receiveAsFlow()
-
-    // Mock current user for development
-    private val mockUserId = "user1"
 
     init {
         loadNotifications()
@@ -79,13 +80,12 @@ class NotificationsViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true) }
 
             try {
-                val dbNotifications =
-                    notificationRepository.getNotificationsForUser(mockUserId).firstOrNull()
-                val notificationList = if (dbNotifications.isNullOrEmpty()) {
-                    getDefaultNotifications()
+                // Get the current user ID from AuthManager
+                val userId = authManager.getCurrentUserId() ?: "user1" // Fallback to mock user if not available
 
-                } else {
-                    dbNotifications.map { notification ->
+                // Load notifications from repository
+                notificationRepository.getNotificationsForUser(userId).collect { dbNotifications ->
+                    val notificationList = dbNotifications.map { notification ->
                         NotificationUi(
                             id = notification.notificationId,
                             title = notification.title,
@@ -99,12 +99,16 @@ class NotificationsViewModel @Inject constructor(
                         )
                     }
 
-                }
-                _uiState.update { state ->
-                    state.copy(
-                        notifications = notificationList,
-                        isLoading = false
-                    )
+                    // Count unread notifications
+                    val unreadCount = notificationList.count { !it.isRead }
+
+                    _uiState.update { state ->
+                        state.copy(
+                            notifications = notificationList,
+                            unreadCount = unreadCount,
+                            isLoading = false
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update { state ->
@@ -114,28 +118,98 @@ class NotificationsViewModel @Inject constructor(
                     )
                 }
             }
-
-
         }
     }
 
     fun markAsRead(notificationId: String) {
         viewModelScope.launch {
-            notificationRepository.markNotificationAsRead(notificationId)
+            try {
+                notificationRepository.markNotificationAsRead(notificationId)
+
+                // Update the UI state to reflect the change
+                _uiState.update { state ->
+                    val updatedNotifications = state.notifications.map { notification ->
+                        if (notification.id == notificationId) {
+                            notification.copy(isRead = true)
+                        } else {
+                            notification
+                        }
+                    }
+
+                    state.copy(
+                        notifications = updatedNotifications,
+                        unreadCount = updatedNotifications.count { !it.isRead }
+                    )
+                }
+            } catch (e: Exception) {
+                _events.send(NotificationEvent.ShowMessage("Failed to mark notification as read: ${e.message}"))
+            }
         }
     }
 
     fun onNotificationClicked(notification: NotificationUi) {
         viewModelScope.launch {
-            // Mark as read first
-            markAsRead(notification.id)
+            // Mark as read
+            if (!notification.isRead) {
+                markAsRead(notification.id)
+            }
 
-            // If there's a child associated, navigate to child profile
-            if (notification.childId != null) {
-                _events.send(NotificationEvent.NavigateToChild(notification.childId))
-            } else {
-                // Just show a message if there's no specific navigation
-                _events.send(NotificationEvent.ShowMessage("Notification acknowledged"))
+            // Handle navigation based on notification type and associated entities
+            when (notification.type) {
+                NotificationType.MEDICATION -> {
+                    if (notification.childId != null) {
+                        _events.send(NotificationEvent.NavigateToChild(notification.childId))
+                    } else {
+                        _events.send(NotificationEvent.ShowMessage("Medication notification acknowledged"))
+                    }
+                }
+                NotificationType.MEAL -> {
+                    if (notification.childId != null) {
+                        _events.send(NotificationEvent.NavigateToChild(notification.childId))
+                    } else {
+                        _events.send(NotificationEvent.ShowMessage("Meal notification acknowledged"))
+                    }
+                }
+                NotificationType.HEALTH -> {
+                    if (notification.childId != null) {
+                        _events.send(NotificationEvent.NavigateToChild(notification.childId))
+                    } else {
+                        _events.send(NotificationEvent.ShowMessage("Health notification acknowledged"))
+                    }
+                }
+                NotificationType.SYSTEM -> {
+                    _events.send(NotificationEvent.ShowMessage("System notification acknowledged"))
+                }
+            }
+        }
+    }
+
+    // Create a new notification (for testing purposes)
+    fun createTestNotification(
+        title: String,
+        message: String,
+        type: String,
+        priority: Int,
+        childId: String? = null
+    ) {
+        viewModelScope.launch {
+            try {
+                val userId = authManager.getCurrentUserId() ?: "user1"
+
+                notificationRepository.createNotification(
+                    userId = userId,
+                    childId = childId,
+                    title = title,
+                    message = message,
+                    type = type,
+                    priority = priority,
+                    actionId = null
+                )
+
+                _events.send(NotificationEvent.ShowMessage("Test notification created"))
+                loadNotifications() // Reload to show the new notification
+            } catch (e: Exception) {
+                _events.send(NotificationEvent.ShowMessage("Failed to create notification: ${e.message}"))
             }
         }
     }
@@ -148,54 +222,12 @@ class NotificationsViewModel @Inject constructor(
             dateTime.toLocalDate() == now.toLocalDate() -> {
                 "Today at ${dateTime.format(DateTimeFormatter.ofPattern("h:mm a"))}"
             }
-
             dateTime.toLocalDate() == now.toLocalDate().minusDays(1) -> {
                 "Yesterday at ${dateTime.format(DateTimeFormatter.ofPattern("h:mm a"))}"
             }
-
             else -> {
                 dateTime.format(formatter)
             }
         }
-    }
-
-    private fun getDefaultNotifications(): List<NotificationUi> {
-        val now = LocalDateTime.now()
-
-        return listOf(
-            NotificationUi(
-                id = "notification1",
-                title = "Medication Reminder",
-                message = "Emma's antibiotic is due in 15 minutes",
-                type = NotificationType.MEDICATION,
-                priority = 2,
-                time = formatDateTime(now.minusMinutes(5)),
-                isRead = false,
-                childId = "child1",
-                actionId = "medication1"
-            ),
-            NotificationUi(
-                id = "notification2",
-                title = "Meal Time",
-                message = "Lunch is scheduled for 12:00 PM",
-                type = NotificationType.MEAL,
-                priority = 1,
-                time = formatDateTime(now.minusHours(2)),
-                isRead = true,
-                childId = null,
-                actionId = "meal1"
-            ),
-            NotificationUi(
-                id = "notification3",
-                title = "Health Update",
-                message = "Noah's temperature is normal",
-                type = NotificationType.HEALTH,
-                priority = 0,
-                time = formatDateTime(now.minusHours(3)),
-                isRead = false,
-                childId = "child2",
-                actionId = "health1"
-            )
-        )
     }
 }
