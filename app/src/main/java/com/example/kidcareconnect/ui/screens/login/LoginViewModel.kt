@@ -1,3 +1,4 @@
+
 package com.example.kidcareconnect.ui.screens.login
 
 import android.os.Build
@@ -47,6 +48,24 @@ class LoginViewModel @Inject constructor(
                             userId = user.userId,
                             userRole = user.role
                         )
+                    }
+                }
+            } else {
+                // Try to restore user from stored ID
+                val wasRestored = authManager.checkForStoredUser { userId ->
+                    userRepository.getUserById(userId)
+                }
+
+                if (wasRestored) {
+                    val user = authManager.currentUser.value
+                    if (user != null) {
+                        _uiState.update {
+                            it.copy(
+                                isLoggedIn = true,
+                                userId = user.userId,
+                                userRole = user.role
+                            )
+                        }
                     }
                 }
             }
