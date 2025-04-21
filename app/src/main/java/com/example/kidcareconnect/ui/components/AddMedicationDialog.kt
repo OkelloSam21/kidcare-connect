@@ -150,7 +150,10 @@ fun AddMedicationDialog(
                         readOnly = true,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(
+                                type = MenuAnchorType.PrimaryEditable,
+                                enabled = showStartDatePicker
+                            )
                     )
                 }
                 
@@ -166,7 +169,10 @@ fun AddMedicationDialog(
                         readOnly = true,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .menuAnchor()
+                            .menuAnchor(
+                                type = MenuAnchorType.PrimaryEditable,
+                                enabled = showEndDatePicker
+                            )
                     )
                 }
             }

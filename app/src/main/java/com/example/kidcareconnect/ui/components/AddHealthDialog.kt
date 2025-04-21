@@ -9,19 +9,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.kidcareconnect.ui.screens.doctor.HealthLogFormData
 
+
+/**
+ * Dialog for adding a new health log entry
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AddHealthLogDialog(
-    childId: String,
     onDismiss: () -> Unit,
-    onAddHealthLog: (
-        temperature: Float?,
-        heartRate: Int?,
-        symptoms: String?,
-        notes: String?
-    ) -> Unit
+    onAddHealthLog: (HealthLogFormData) -> Unit
 ) {
     var temperature by remember { mutableStateOf("") }
     var heartRate by remember { mutableStateOf("") }
@@ -31,6 +30,11 @@ fun AddHealthLogDialog(
     // Validation states
     var temperatureError by remember { mutableStateOf(false) }
     var heartRateError by remember { mutableStateOf(false) }
+
+    // Form is valid if at least one field has content and all filled fields are valid
+    val isFormValid = (temperature.isNotEmpty() || heartRate.isNotEmpty() ||
+            symptoms.isNotEmpty() || notes.isNotEmpty()) &&
+            !temperatureError && !heartRateError
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -101,7 +105,29 @@ fun AddHealthLogDialog(
                 )
             }
         },
-        confirmButton = {},
-        dismissButton = {},
-        )
+        confirmButton = {
+            Button(
+                onClick = {
+                    if (isFormValid) {
+                        onAddHealthLog(
+                            HealthLogFormData(
+                                temperature = temperature.toFloatOrNull(),
+                                heartRate = heartRate.toIntOrNull(),
+                                symptoms = if (symptoms.isBlank()) null else symptoms,
+                                notes = if (notes.isBlank()) null else notes
+                            )
+                        )
+                    }
+                },
+                enabled = isFormValid
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }

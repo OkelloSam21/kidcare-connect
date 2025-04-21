@@ -154,7 +154,7 @@ fun AddChildDialog(
         confirmButton = {
             Button(
                 onClick = {
-                    if (name.isNotBlank() && !dateError && dateOfBirth != null) {
+                    if (name.isNotBlank() && !dateError) {
                         onAddChild(
                             name,
                             selectedDate,
